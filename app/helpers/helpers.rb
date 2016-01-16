@@ -16,7 +16,7 @@ helpers do
     state_name = state_page.css( 'div.panes div h3.state-name' ).text
 
     state_page_clinics_div_html.each do |p_tag|
-      p state_name.upcase!
+      p state_name
       p_tag.children.each do |node|
         node_text = remove_whitespace(node)
 
