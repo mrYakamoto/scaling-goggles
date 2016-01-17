@@ -2,6 +2,7 @@ helpers do
 
   def life_call_parser_cpcs
       state_names_in_array.each do |state|
+        p state
         state_page = Nokogiri::HTML(open("http://www.lifecall.org/cpc/#{state}.html"))
         state_page_parser(state_page)
       end
@@ -44,7 +45,7 @@ helpers do
         full_address = "#{remove_whitespace(p_tag.children[1])}, #{remove_whitespace(p_tag.children[2])}"
         address = remove_whitespace(p_tag.children[1])
         city = remove_whitespace(p_tag.children[2]).match(/^\w*/)
-        zip = remove_whitespace(p_tag.children[2]).match(/\d/)
+        zip = remove_whitespace(p_tag.children[2]).match(/[\d]/)
 
         new_clinic = Clinic.new
         new_clinic.name = name
@@ -66,6 +67,9 @@ helpers do
     node_text.sub!(/(\\t|\\r|\\n)/, "")
     node_text.sub!(/^\s*/, "")
     node_text.sub!(/(\\t|\\r|\\n|\s)*$/, "")
+    node_text.gsub!("/", " ")
+    node_text.gsub!(/[#'&½’"¼]/, "")
+    node_text.gsub(/\s\s/, " ")
   end
 
   def po_box?(text)

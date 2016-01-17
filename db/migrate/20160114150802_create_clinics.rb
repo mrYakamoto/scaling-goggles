@@ -7,6 +7,8 @@ class CreateClinics < ActiveRecord::Migration
       t.string :city
       t.string :state
       t.string :zip
+      t.decimal :lat
+      t.decimal :lng, :precision=>10, :scale=>7
 
       t.string :clinic_type
 

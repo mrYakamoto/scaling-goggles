@@ -84,6 +84,16 @@ namespace :generate do
 end
 
 namespace :db do
+
+  desc "rollback your migration"
+    task :rollback do
+      steps = ENV['STEPS']
+      abort("no STEPS specified. use `rake db:rollback STEPS=1`") if !steps
+      ActiveRecord::Migrator.rollback(
+        'db/migrate',
+        steps.to_i
+      )
+    end
   desc "Drop, create, and migrate the database"
   task :reset => [:drop, :create, :migrate]
 

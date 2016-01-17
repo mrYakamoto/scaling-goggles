@@ -1,10 +1,8 @@
 $(document).ready(function() {
 
 
-clinicNameAndAddress(1);
+  initMap();
 });
-
-
 
 
 function initMap(clinicObj){
@@ -17,87 +15,106 @@ function initMap(clinicObj){
   };
   var map = new google.maps.Map(mapCanvas, mapOptions);
 
-  // var numClinics = numOfCpcs();
-  // for (var i = 1; i <= numClinics; i++ ){
-  //   clinicObject = clinicNameAndAddress();
-  // }
+  getAllClinicsInfo();
 
-  var marker = new google.maps.Marker({
-    position: {lat: clinicObj.lat, lng: clinicObj.lng},
-    map: map,
-    title: clinicObj.name,
-  });
-  // console.log(marker);
-}
+  function createMarker(clinicObj){
+    var clinicLoc = { lat: clinicObj.lat, lng: clinicObj.lng };
+    var marker = new google.maps.Marker({
+      position: clinicLoc,
+      map: map,
+      title: clinicObj.name,
+    });
+  }
 
-function createMarker(clinicObjWithLatLng){
-  var marker = new google.maps.Marker({
-    position: {lat: clinicObjWithLatLng.lat, lng: clinicObjWithLatLng.lng},
-    map: map,
-    title: clinicObjWithLatLng.name,
-  });
-  console.log("CREATE_MARKER");
-  console.log(marker);
-  initMap(marker);
-  // initMap(marker);
-}
+  function getAllClinicsInfo(){
+    $.get("/clinicsLocations", function(response){
+      arrayClinicObjects = jQuery.parseJSON(response);
+      var clinicCount = arrayClinicObjects.length;
+      // console.log(clinicCount);
 
-function latLngData(clinicObj){
+      for (var i=0; i < clinicCount; i++){
+        if ((arrayClinicObjects[i].lat)&&(arrayClinicObjects[i].lng)){
+          console.log("INSIDE IF");
+
+          arrayClinicObjects[i].lat = parseFloat(arrayClinicObjects[i].lat)
+
+          arrayClinicObjects[i].lng = parseFloat(arrayClinicObjects[i].lng)
+          // console.log(arrayClinicObjects[i]);
+          createMarker(arrayClinicObjects[i]);
+        }
+        else {
+          console.log("INSIDE ELSE");
+          latLngData(arrayClinicObjects[i]);
+        }
+
+      }
+    });
+  }
+
+  function clinicNameAndAddress(id){
+    $.ajax({
+      type: 'GET',
+      url: "/clinics/"+id+"/data"
+    })
+    .done(function(response){
+      // console.log(response);
+      var clinicObj = jQuery.parseJSON(response);
+      // console.log(clinicObj);
+
+    })
+    .fail(function(xhr,unknown,error){
+      alert(error);
+    });
+  }
+
+  function latLngData(clinicObj){
     $.ajax({
       type: 'GET',
       url: "/geolocate/"+clinicObj.name+"/"+clinicObj.full_address,
     })
     .done(function(response){
-      alert(response);
-      var parsedGeoResponse = jQuery.parseJSON(response);
-      alert(parsedGeoResponse);
-      clinicObj.lat = parsedGeoResponse.results[0].geometry.location.lat;
-      clinicObj.lng = parsedGeoResponse.results[0].geometry.location.lng;
-      console.log("LAT_LNG_DATA");
-      console.log(clinicObj.lat);
-      console.log(clinicObj.lng);
-      initMap(clinicObj);
+      console.log("latLngData RESPONSE");
+    // console.log(response);
+    var parsedGeoResponse = jQuery.parseJSON(response);
+    clinicObj.lat = parsedGeoResponse.results[0].geometry.location.lat;
+    clinicObj.lng = parsedGeoResponse.results[0].geometry.location.lng;
+    saveLatLngData(clinicObj);
+  })
+    .fail(function(xhr,unknown,error){
+      alert(error);
+    });
+  }
+
+  function saveLatLngData(clinicObj){
+    clinicInfo = {};
+    clinicInfo.id = clinicObj.id;
+    clinicInfo.lat = clinicObj.lat;
+    clinicInfo.lng = clinicObj.lng;
+    $.ajax({
+      type: 'PUT',
+      url: "/saveLatLng/"+clinicInfo.id+"/"+clinicInfo.lat+"/"+clinicInfo.lng
+    })
+    .done(function(response){
+      console.log("saveLatLngData RESPONSE");
+      console.log(response);
+      createMarker(clinicObj);
     })
     .fail(function(xhr,unknown,error){
       alert(error);
     });
+
+  }
+
+
 }
 
-function clinicNameAndAddress(id){
-  $.ajax({
-    type: 'GET',
-    url: "/clinics/"+id+"/data"
-  })
-  .done(function(response){
-    alert(response);
-    var clinicObj = jQuery.parseJSON(response);
-    alert(clinicObj);
-    latLngData(clinicObj);
-    // createMarker(clinicObjWithLatLng);
-      // console.log("CLINIC_NAME_AND_ADDRESS");
-      // console.log(clinicObj.name);
-      // console.log(clinicObj.full_address);
 
-    // return clinicObj;
-  })
-  .fail(function(xhr,unknown,error){
-    alert(error);
-  });
-}
 
-function numOfCpcs(){
-  $.ajax({
-    type: 'GET',
-    url: '/numbercpcs'
-  })
-  .done(function(response){
-    alert(response);
-    return response;
-  })
-  .fail(function(xhr,unknown,error){
-    alert(error);
-  });
-}
+
+
+// "2016-01-16 23:59:35.278558"
+
+
 
 
 
